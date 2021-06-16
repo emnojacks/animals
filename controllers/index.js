@@ -1,4 +1,4 @@
 module.exports = {
-  animalcontroller: require("./animalcontroller"),
-  usercontroller: require("./usercontroller"),
-};
+    animalcontroller: require("./animalcontroller"),
+    usercontroller: require("./usercontroller"),
+}

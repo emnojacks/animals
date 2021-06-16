@@ -10,9 +10,9 @@ router.post("/create", async(req, res) => {
     try {
         const newUser = await User.create({
             username,
-            password: bcrypt.hashSync(password, 10),
+            password: bcrypt.hashSync(password, 13),
         });
-        let token = jwt.sign({ id: User.id }, process.env.JWT_SECRET, { expiresIn: "14d" });
+        let token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, { expiresIn: "14d" });
 
         res.status(201).json({
             message: "new user created",
@@ -33,24 +33,25 @@ router.post("/create", async(req, res) => {
 });
 
 router.post("/login", async(req, res) => {
-    let { username, password } = req.body.user;
+    let { username } = req.body.user;
     try {
         const loginUser = await User.findOne({
             where: {
-                username: username,
-                password: password,
+                username: username
             }
         });
 
         if (loginUser) {
-            let token =
-                jwt.sign({ id: User.id }, process.env.JWT_SECRET, { expiresIn: "14d" });
-            res.status(200).json({
-                user: loginUser,
-                message: "User successfully logged in",
-                sessionToken: token,
-            });
-
+            let passwordComparison = await bcrypt.compare(password, loginUser.password);
+            if (passwordComparison) {
+                let token =
+                    jwt.sign({ id: User.id }, process.env.JWT_SECRET, { expiresIn: "14d" });
+                res.status(200).json({
+                    user: loginUser,
+                    message: "User successfully logged in",
+                    sessionToken: token,
+                });
+            }
         } else {
             res.status(401).json({
                 message: "Login attempt failed",

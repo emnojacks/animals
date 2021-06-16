@@ -12,6 +12,7 @@ app.use(express.json());
 
 app.use("/user", controllers.usercontroller);
 
+app.use("/animal", controllers.animalcontroller);
 //creation of user/create endpoint
 //app.use('/create', controllers.usercontroller);
 
