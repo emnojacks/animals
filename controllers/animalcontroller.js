@@ -1,17 +1,23 @@
 const express = require("express");
 const router = express.Router();
-const { Animal } = require("../models");
 //capital vars reference the models 
 
-module.exports = router;
+const { Animal, User } = require("../models");
+//adding authorization requirements to animal view
 
-router.post("/create", async(req, res) => {
-    let { name, legNumber, predator } = req.body.animal;
+const validateSession = require("../middleware/validate-session");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+//CREATE ANIMAL//
+router.post("/create", validateSession, async(req, res) => {
+    let { name, legNumber, predator, userId } = req.body.animal;
     try {
         const newAnimal = await Animal.create({
             name,
             legNumber,
-            predator
+            predator,
+            userId
         });
         res.status(201).json({
             animal: newAnimal,
@@ -24,7 +30,8 @@ router.post("/create", async(req, res) => {
     }
 });
 
-router.get("/", async(req, res) => {
+//GET ALL ANIMALS//
+router.get("/", validateSession, async(req, res) => {
     try {
         const allAnimals = await Animal.findAll();
         res.status(200).json(allAnimals);
@@ -35,30 +42,40 @@ router.get("/", async(req, res) => {
     }
 });
 
-
-router.delete("/delete/:name", async(req, res) => {
+//DELETE ANIMAL//
+router.delete("/delete/:name", validateSession, async(req, res) => {
+    //first grab the user's id from the user model --- not sure how this works
+    const userId = req.user.id;
+    //grab animal name from search params and set to the animal to delete
     const animalToDelete = req.params.name;
+    //find all the user's animals 
     try {
-        const query = {
+        const userAnimalsToDelete = await Animal.findAll({
             where: {
+                userId: userId,
                 animal: animalToDelete
             }
-        }
-        await Animal.destroy(query);
-
+        });
+        res.status(200).json(userAnimalsToDelete);
+    } catch (err) {
+        res.status(404).json({ message: "No user animals found matching those specs" });
+    };
+    if (userAnimalsToDelete) {
+        await Animal.destroy(userAnimalsToDelete);
         res.status(200).json({
             message: "Animal has been deleted."
         });
-
-    } catch (err) {
-        res.status(500).json({
+    } else {
+        res.status(304).json({
             message: "Failed to delete animal.",
         });
     }
 });
 
 
-router.put("/update/:id", async(req, res) => {
+
+//UPDATE ANIMAL//
+router.put("/update/:id", validateSession, async(req, res) => {
     const animalToUpdate = req.params.id;
     const { name, legNumber, predator } = req.body.animal;
     const query = {
@@ -71,6 +88,8 @@ router.put("/update/:id", async(req, res) => {
         name: name,
         legNumber: legNumber,
         predator: predator
+            //dont want to include userId here bc it will never change 
+            //we don't want user to be able to change it 
     };
     try {
         //update is sequelize method that takes two args - first is object holding the new value, and second is where to place new data
@@ -83,3 +102,6 @@ router.put("/update/:id", async(req, res) => {
         res.status(500).json({ error: err });
     }
 });
+
+
+module.exports = router;
