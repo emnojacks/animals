@@ -37,7 +37,7 @@ router.post("/create", async(req, res) => {
 
 //USER LOG IN 
 router.post("/login", async(req, res) => {
-    let { username } = req.body.user;
+    let { username, password } = req.body.user;
     try {
         const loginUser = await User.findOne({
             where: {
@@ -49,7 +49,8 @@ router.post("/login", async(req, res) => {
             let passwordComparison = await bcrypt.compare(password, loginUser.password);
             if (passwordComparison) {
                 let token =
-                    jwt.sign({ id: User.id }, process.env.JWT_SECRET, { expiresIn: "14d" });
+                    //creates an ID for the user
+                    jwt.sign({ id: loginUser.id }, process.env.JWT_SECRET, { expiresIn: "14d" });
                 res.status(200).json({
                     user: loginUser,
                     message: "User successfully logged in",

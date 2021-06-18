@@ -12,12 +12,15 @@ app.use(express.json());
 
 app.use("/user", controllers.usercontroller);
 
+//controls all the routes below 
+app.use(require("./middleware/validate-session"))
+
 app.use("/animal", controllers.animalcontroller);
 //creation of user/create endpoint
 //app.use('/create', controllers.usercontroller);
 
 db.authenticate()
-    .then(() => db.sync()) // => {force: true}
+    .then(() => db.sync({})) // => {force: true}
     .then(() => {
         app.listen(3000, () =>
             console.log(`[Server: ] App is listening on Port ${3000}`)

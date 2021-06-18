@@ -17,7 +17,7 @@ router.post("/create", validateSession, async(req, res) => {
             name,
             legNumber,
             predator,
-            userId
+            userId: req.user.id
         });
         res.status(201).json({
             animal: newAnimal,
@@ -34,6 +34,7 @@ router.post("/create", validateSession, async(req, res) => {
 router.get("/", validateSession, async(req, res) => {
     try {
         const allAnimals = await Animal.findAll();
+        where: { userId: req.user.id }
         res.status(200).json(allAnimals);
     } catch (err) {
         res.status(500).json({
@@ -77,10 +78,12 @@ router.delete("/delete/:name", validateSession, async(req, res) => {
 //UPDATE ANIMAL//
 router.put("/update/:id", validateSession, async(req, res) => {
     const animalToUpdate = req.params.id;
+    const userId = req.user.id;
     const { name, legNumber, predator } = req.body.animal;
     const query = {
         where: {
             id: animalToUpdate,
+            userId: userId
         }
     };
     //update the animal 
